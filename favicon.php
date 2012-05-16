@@ -4,7 +4,6 @@ class Favicon
 {
     protected $url = '';
     protected $default = '';
-    protected $log = '';
 
     public function __construct($args = array())
     {
@@ -104,8 +103,9 @@ class Favicon
 
             $dom = new DOMDocument();
             // Use error supression, because the HTML might be too malformed.
-            if ($dom->loadHTML($head)) {
+            if (@$dom->loadHTML($head)) {
                 $links = $dom->getElementsByTagName('link');
+                // TODO: Improve this to adhere to a determined precedence.
                 foreach ($links as $link) {
                     if ($link->hasAttribute('rel') && strtolower($link->getAttribute('rel')) == 'shortcut icon') {
                         $favicon = $link->getAttribute('href');
