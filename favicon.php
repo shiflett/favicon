@@ -110,6 +110,9 @@ class Favicon
                     if ($link->hasAttribute('rel') && strtolower($link->getAttribute('rel')) == 'shortcut icon') {
                         $favicon = $link->getAttribute('href');
                         $found = TRUE;
+                    } elseif ($link->hasAttribute('rel') && strtolower($link->getAttribute('rel')) == 'icon') {
+                        $favicon = $link->getAttribute('href');
+                        $found = TRUE;
                     } elseif ($link->hasAttribute('href') && strpos($link->getAttribute('href'), 'favicon') !== FALSE) {
                         $favicon = $link->getAttribute('href');
                         $found = TRUE;
