@@ -4,6 +4,8 @@ class Favicon
 {
     protected $url = '';
     protected $default = '';
+    protected $cacheDir;
+    protected $cacheTimeout;
 
     public function __construct($args = array())
     {
@@ -13,6 +15,22 @@ class Favicon
 
         if (isset($args['default'])) {
             $this->default = $args['default'];
+        }
+    }
+
+    public function cache($args) {
+        if (isset($args['dir'])) {
+            $this->cacheDir = $args['dir'];
+        } else {
+            $this->cacheDir = '/tmp';
+        }
+
+        if (isset($args['timeout'])) {
+            if ($args['timeout']) {
+                $this->cacheTimeout = $args['timeout'];
+            } else {
+                $this->cacheTimeout = 0;
+            }
         }
     }
 
@@ -88,11 +106,24 @@ class Favicon
 
         $found = FALSE;
 
-        // Try /favicon.ico first.
-        $info = $this->info("{$url}/favicon.ico");
-        if ($info['status'] == '200') {
-            $favicon = $info['url'];
-            $found = TRUE;
+        // Check the cache first.
+        if ($this->cacheTimeout) {
+            $cache = $this->cacheDir . '/' . md5($url);
+            if (file_exists($cache) && is_readable($cache) && (time() - filemtime($cache) < $this->cacheTimeout)) {
+                $favicon = file_get_contents($cache);
+                $found = TRUE;
+            }
+        } else {
+            $cache = FALSE;
+        }
+
+        if (!$found) {
+            // Try /favicon.ico first.
+            $info = $this->info("{$url}/favicon.ico");
+            if ($info['status'] == '200') {
+                $favicon = $info['url'];
+                $found = TRUE;
+            }
         }
 
         // See if it's specified in a link tag.
@@ -134,6 +165,13 @@ class Favicon
         }
 
         if ($found) {
+            // Check to see if result should be cached.
+            if ($cache) {
+                if (!file_exists($cache) || (is_writable($cache) && time() - filemtime($cache) > $this->cacheTimeout)) {
+                    file_put_contents($cache, $favicon);
+                }
+            }
+
             return $favicon;
         } else {
             return $this->default;
